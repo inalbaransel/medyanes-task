@@ -1,0 +1,35 @@
+//Prisma, sen benim için Javascript kodu üret diyoruz.
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+// MongoDB kullanıyoruz ve adresi .env dosyasından alıyoruz.
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+//"Todo" adında bir tablomuz (koleksiyonumuz) olacak.
+model Todo {
+  // id: Her satırın benzersiz kimliği.
+  // @id: Bu alan kimliktir.
+  // @default(auto()): Otomatik oluştur.
+  // @map("_id"): MongoDB bunu "_id" diye saklar.
+  // @db.ObjectId: MongoDB'ye özel ID formatı.
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // title: Görevin başlığı
+  title       String   
+  
+  // description: Görevin detayı
+  //(?) -> Bu alan boş bırakılabilir
+  description String?  
+  
+  // status: Durumu
+  // @default(false): İlk başta "Yapılmadı" olsun.
+  status      Boolean  @default(false) 
+  
+
+  // @default(now()): Kayıt atıldığı anki saati otomatik bas.
+  createdAt   DateTime @default(now())
+}
