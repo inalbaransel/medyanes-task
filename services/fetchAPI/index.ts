@@ -1,11 +1,10 @@
-// Örn: "http://localhost:3000/api"
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 //postAPI Fonksiyonu: VERİ GÖNDERMEK / DEĞİŞTİRMEK İÇİN
 
 export const postAPI = async (
-  endpoint: string, // endpoint: Gideceğimiz oda numarası. String (Yazı) olmalı. Örn: "/todos"
-  body: any, // body: Götürdüğümüz koli/paket. Any (Her şey) olabilir. (İçinde başlık, tarih vs. var)
+  endpoint: string, // endpoint: Gideceğimiz oda numarası. String olmalı. Örn: "/todos"
+  body: any, // body: Götürdüğümüz koli/paket. Any olabilir. (İçinde başlık, tarih vs. var)
   method = "POST" // method: Nasıl gideceğiz? Varsayılan "POST" (Yeni kayıt). Ama "PUT" veya "DELETE" de olabilir.
 ) => {
   try {
@@ -15,14 +14,14 @@ export const postAPI = async (
       method: method, // Mektubun türü (POST, PUT, DELETE...)
 
       // headers: Zarfın üzerindeki bilgiler.
-      // "Content-Type": "application/json" -> "Kardeşim ben sana JSON (Yazı formatında veri) gönderiyorum" diyoruz.
+      // "Content-Type": "application/json" ->  ben sana JSON gönderiyorum diyoruz.
       headers: { "Content-Type": "application/json" },
 
       // body: Koliyi paketliyoruz.
-      // JSON.stringify(body) -> Javascript objesini, internetten gidebilsin diye "Yazıya (String)" çeviriyoruz.
+      // JSON.stringify(body) -> Javascript objesini, internetten gidebilsin diye Yazıya çeviriyoruz.
       body: JSON.stringify(body),
 
-      // cache: "no-store" -> "Sakın hafızana atma, her seferinde taze veri getir/götür" diyoruz.
+      // cache: "no-store" -> Sakın hafızana atma, her seferinde taze veri getir/götür diyoruz.
       cache: "no-store",
     });
 
