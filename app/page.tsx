@@ -10,67 +10,82 @@ import { Input, TextArea } from "../components/ui/Input";
 
 export default function Home() {
   //ZUSTAND DEPOSUNDAN VERİLERİ VE FONKSİYONLARI ÇAĞIRMA
-  // useTodoStore bizim marketimiz. Oradan "todos" listesini ve alışveriş sepeti fonksiyonlarını alıyoruz.
-  const { todos, setTodos, addTodo, removeTodo, toggleTodo } = useTodoStore();
+  const { todos, setTodos, addTodo, removeTodo, updateTodo } = useTodoStore();
 
   //Sadece bu sayfadaki formda, o anlık yazılan yazıları tutmak için "useState" kullanıyoruz.
-  // title: Input'un içindeki yazı. setTitle: O yazıyı değiştirme kumandası.
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null); // Hangi todo düzenleniyor?
 
   useEffect(() => {
-    // Postacıya diyoruz ki: "Git /todos adresinden verileri getir"
     getAPI("/todos").then((data) => {
-      // Gelen veriyi (data) alıp depoya (setTodos) koyuyoruz.
       setTodos(data);
     });
   }, []);
 
-  //Düğmelere basınca ne olacak
-
-  //KAYDETME İŞLEMİ (Form gönderilince çalışır)
+  //KAYDETME VEYA GÜNCELLEME İŞLEMİ
   const handleSubmit = async (e: any) => {
-    e.preventDefault(); // Sayfa yenilenmesin! (Normalde form gönderince sayfa yenilenir, onu engelliyoruz)
+    e.preventDefault();
 
-    // Backend'e Mektup Gönder (POST)
-    // postAPI fonksiyonuna adresi ve veriyi veriyoruz.
-    const yeniVeri = await postAPI("/todos", {
-      title: title,
-      description: description,
-    });
+    if (editingId) {
+      // GÜNCELLEME (PUT)
+      const guncellenenVeri = await postAPI(
+        "/todos",
+        {
+          id: editingId,
+          title: title,
+          description: description,
+        },
+        "PUT"
+      );
 
-    // Eğer backend'den düzgün cevap geldiyse (yeniVeri varsa)
-    if (yeniVeri) {
-      // Depoya da ekle ki ekranda hemen görünsün (Sayfa yenilemeye gerek kalmadan)
-      addTodo(yeniVeri);
-
-      // Formun içini temizle
-      setTitle("");
-      setDescription("");
+      if (guncellenenVeri) {
+        updateTodo(guncellenenVeri);
+        setEditingId(null); // Düzenleme modundan çık
+        setTitle("");
+        setDescription("");
+      }
     } else {
-      alert("Bir hata oluştu");
+      // YENİ EKLEME (POST)
+      const yeniVeri = await postAPI("/todos", {
+        title: title,
+        description: description,
+      });
+
+      if (yeniVeri) {
+        addTodo(yeniVeri);
+        setTitle("");
+        setDescription("");
+      } else {
+        alert("Bir hata oluştu");
+      }
     }
   };
 
   // SİLME İŞLEMİ
   const handleDelete = async (id: any) => {
-    // Önce Backend'den Siliyoruz
-    // 3. parametre olarak "DELETE" gönderiyoruz ki silme işlemi yapsın.
     await postAPI("/todos", { id: id }, "DELETE");
-
-    // Sonra Ekrandan (Depodan) Siliyoruz
     removeTodo(id);
   };
 
-  // GÜNCELLEME İŞLEMİ (Tik Atma / Kaldırma)
-  const handleToggle = async (id: any, status: boolean) => {
-    const yeniDurum = !status; // True ise False yap, False ise True yap. (Tersine çevir)
+  // DÜZENLEME MODUNA GEÇME
+  const handleEdit = (todo: any) => {
+    setEditingId(todo.id); // Hangi ID olduğunu hafızaya al
+    setTitle(todo.title); // Yazıları kutucuklara doldur
+    setDescription(todo.description || "");
+  };
 
-    // Backend'e Haber Ver (PUT - Güncelleme)
-    await postAPI("/todos", { id: id, status: yeniDurum }, "PUT");
+  // GÜNCELLEME İŞLEMİ (Sadece Tik Atma / Kaldırma)
+  const handleToggle = async (todo: any) => {
+    const guncellenenVeri = await postAPI(
+      "/todos",
+      { ...todo, status: !todo.status },
+      "PUT"
+    );
 
-    // Depoyu Güncelle (Ekranda tik değişsin)
-    toggleTodo(id, yeniDurum);
+    if (guncellenenVeri) {
+      updateTodo(guncellenenVeri);
+    }
   };
 
   return (
@@ -87,12 +102,16 @@ export default function Home() {
 
         <Card className="p-1">
           <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-2">
+            <h2 className="text-xs font-bold text-white/30 uppercase tracking-widest px-1">
+              {editingId ? "Görevi Düzenle" : "Yeni Görev"}
+            </h2>
             <Input
               type="text"
-              placeholder="Yeni bir görev ekle..."
+              placeholder="Görev başlığı..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="text-lg! font-medium placeholder:font-normal"
+              required
             />
             <TextArea
               placeholder="Detaylar (isteğe bağlı)"
@@ -101,13 +120,27 @@ export default function Home() {
               rows={2}
               className="resize-none"
             />
-            <div className="flex justify-end pt-2">
+            <div className="flex gap-2 pt-2">
+              {editingId && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditingId(null);
+                    setTitle("");
+                    setDescription("");
+                  }}
+                  className="flex-1 rounded-full!"
+                >
+                  İptal
+                </Button>
+              )}
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full rounded-full! mt-2"
+                className="flex-2 rounded-full! "
               >
-                Oluştur
+                {editingId ? "Güncelle" : "Oluştur"}
               </Button>
             </div>
           </form>
@@ -124,7 +157,7 @@ export default function Home() {
                   <input
                     type="checkbox"
                     checked={todo.status}
-                    onChange={() => handleToggle(todo.id, todo.status)}
+                    onChange={() => handleToggle(todo)}
                     className="appearance-none w-6 h-6 border-[1.5px] border-white/40 rounded-full checked:bg-white checked:border-white transition-all cursor-pointer relative z-10"
                   />
                   {todo.status && (
@@ -164,26 +197,49 @@ export default function Home() {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => handleDelete(todo.id)}
-                  variant="ghost"
-                  className="p-2! text-white/40 hover:text-red-400 hover:bg-red-500/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all rounded-lg"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
+                  <Button
+                    onClick={() => handleEdit(todo)}
+                    variant="ghost"
+                    className="p-2! text-white/40 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    ></path>
-                  </svg>
-                </Button>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15.232 5.232l3.536 3.536M9 11l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L10.5 11z"
+                      ></path>
+                    </svg>
+                  </Button>
+
+                  <Button
+                    onClick={() => handleDelete(todo.id)}
+                    variant="ghost"
+                    className="p-2! text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
+                    </svg>
+                  </Button>
+                </div>
               </Card>
             ))
           ) : (

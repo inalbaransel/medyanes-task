@@ -43,12 +43,16 @@ export default async function handler(
   // 3. GÜNCELLEME İŞLEMİ (PUT)
   // "Şu görevi değiştirdim" dendiğinde burası çalışır.
   else if (req.method === "PUT") {
-    const { id, status } = req.body; // Hangi id'li görev? Yeni durumu ne?
+    const { id, status, title, description } = req.body; // Paket içinden bilgileri al.
 
     // Veritabanına diyoruz ki: "Şu ID'ye sahip satırı bul ve güncelle."
     const updated = await prisma.todo.update({
       where: { id: id }, // Kimi? -> ID'si bu olanı.
-      data: { status: status }, // Neyi? -> Status'ünü değiştir.
+      data: {
+        status: status,
+        title: title, // Yeni başlık (varsa)
+        description: description, // Yeni açıklama (varsa)
+      },
     });
 
     res.json(updated);

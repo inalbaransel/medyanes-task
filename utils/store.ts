@@ -27,11 +27,13 @@ export const useTodoStore = create<any>((set: any) => ({
       todos: state.todos.filter((t: any) => t.id !== id),
     })),
 
-  // DURUMU DEĞİŞTİRME (Tik Atma)
+  // DURUMU VEYA İÇERİĞİ DEĞİŞTİRME
   // .map() -> Listeyi tek tek gezer.
-  // Mantık: "Eğer bu satırın ID'si aradığımız ID ise, onun status'ünü değiştir. Değilse aynen kalsın."
-  toggleTodo: (id: any, status: any) =>
+  // Mantık: "Eğer bu satırın ID'si aradığımız ID ise, onu yeni gelen veriyle (updatedItem) değiştir. Değilse aynen kalsın."
+  updateTodo: (updatedItem: any) =>
     set((state: any) => ({
-      todos: state.todos.map((t: any) => (t.id === id ? { ...t, status } : t)),
+      todos: state.todos.map((t: any) =>
+        t.id === updatedItem.id ? updatedItem : t
+      ),
     })),
 }));
