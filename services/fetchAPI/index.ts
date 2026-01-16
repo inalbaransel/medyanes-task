@@ -1,11 +1,9 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
-//postAPI Fonksiyonu: VERİ GÖNDERMEK / DEĞİŞTİRMEK İÇİN
-
 export const postAPI = async (
-  endpoint: string, // endpoint: Gideceğimiz oda numarası. String olmalı. Örn: "/todos"
-  body: any, // body: Götürdüğümüz koli/paket. Any olabilir. (İçinde başlık, tarih vs. var)
-  method = "POST" // method: Nasıl gideceğiz? Varsayılan "POST" (Yeni kayıt). Ama "PUT" veya "DELETE" de olabilir.
+  endpoint: string, // endpoint: Gideceğimiz oda numarası.
+  body: any, // body: Götürdüğümüz koli/paket. Any olabilir.
+  method = "POST" // method: Nasıl gideceğiz
 ) => {
   try {
     // fetch -> Tarayıcıya "Git şu adrese" deme komutu.
@@ -39,8 +37,6 @@ export const postAPI = async (
     return null;
   }
 };
-
-//getAPI Fonksiyonu: VERİ OKUMAK / LİSTELEMEK İÇİN
 
 export const getAPI = async (endpoint: string) => {
   // Sadece oda numarasını (endpoint) bilmesi yeterli.

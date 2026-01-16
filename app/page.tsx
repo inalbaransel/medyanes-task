@@ -12,7 +12,6 @@ export default function Home() {
   //ZUSTAND DEPOSUNDAN VERİLERİ VE FONKSİYONLARI ÇAĞIRMA
   const { todos, setTodos, addTodo, removeTodo, updateTodo } = useTodoStore();
 
-  //Sadece bu sayfadaki formda, o anlık yazılan yazıları tutmak için "useState" kullanıyoruz.
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null); // Hangi todo düzenleniyor?
